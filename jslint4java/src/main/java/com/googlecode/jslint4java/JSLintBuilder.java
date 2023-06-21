@@ -121,7 +121,7 @@ public class JSLintBuilder {
             Context cx = contextFactory.enterContext();
             ScriptableObject scope = cx.initStandardObjects();
             cx.evaluateReader(scope, reader, name, 1, null);
-            Function lintFunc = (Function) scope.get("JSLINT", scope);
+            Function lintFunc = (Function) scope.get("jslint", scope);
             return new JSLint(contextFactory, lintFunc);
         } finally {
             Context.exit();

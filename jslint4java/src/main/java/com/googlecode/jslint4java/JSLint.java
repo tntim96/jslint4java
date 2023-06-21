@@ -13,6 +13,8 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextAction;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeArray;
+import org.mozilla.javascript.NativeObject;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.UniqueTag;
@@ -83,6 +85,7 @@ public class JSLint {
     private final ContextFactory contextFactory;
 
     private final Function lintFunc;
+    private NativeObject lintResult;
 
     /**
      * Create a new {@link JSLint} object. You must pass in a {@link Function}, which is the JSLINT
@@ -229,15 +232,13 @@ public class JSLint {
     }
 
     @NeedsContext
-    private void doLint(final String javaScript) {
-        contextFactory.call(new ContextAction() {
+    private NativeObject doLint(final String javaScript) {
+        return (NativeObject) contextFactory.call(new ContextAction() {
             public Object run(Context cx) {
                 String src = javaScript == null ? "" : javaScript;
                 Object[] args = new Object[] { src, optionsAsJavaScriptObject() };
-                // JSLINT actually returns a boolean, but we ignore it as we always go
-                // and look at the errors in more detail.
-                lintFunc.call(cx, lintFunc, null, args);
-                return null;
+                // jslint returns am object
+                return lintFunc.call(cx, lintFunc, null, args);
             }
         });
     }
@@ -246,7 +247,7 @@ public class JSLint {
      * Return the version of jslint in use.
      */
     public String getEdition() {
-        return (String) lintFunc.get("edition", lintFunc);
+        return (String) lintResult.get("edition");
     }
 
     /**
@@ -281,7 +282,7 @@ public class JSLint {
         // results.
         synchronized (this) {
             long before = System.nanoTime();
-            doLint(javaScript);
+            lintResult = doLint(javaScript);
             long after = System.nanoTime();
             return buildResults(systemId, before, after);
         }
@@ -310,10 +311,10 @@ public class JSLint {
 
     private List<Issue> readErrors(String systemId) {
         ArrayList<Issue> issues = new ArrayList<Issue>();
-        Scriptable errors = (Scriptable) lintFunc.get("errors", lintFunc);
-        int count = Util.intValue("length", errors);
-        for (int i = 0; i < count; i++) {
-            Scriptable err = (Scriptable) errors.get(i, errors);
+        NativeArray errors = (NativeArray) lintResult.get("warnings");
+//        int count = Util.intValue("length", errors);
+        for (int i = 0; i < errors.size(); i++) {
+            NativeObject err = (NativeObject) errors.get(i);
             // JSLINT spits out a null when it cannot proceed.
             // TODO Should probably turn i-1th issue into a "fatal".
             if (err != null) {

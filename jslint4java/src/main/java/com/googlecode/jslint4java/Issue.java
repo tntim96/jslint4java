@@ -19,9 +19,9 @@ public class Issue {
             // These used to be zero-based, but now _appear_ to be one-based.
             int line = Util.intValue("line", err);
             int col = Util.intValue("character", err);
-            return new IssueBuilder(systemId, line, col, Util.stringValue("reason", err))
-                    .evidence(Util.stringValue("evidence", err))
-                    .raw(Util.stringValue("raw", err))
+            return new IssueBuilder(systemId, line, col, Util.stringValue("message", err))
+                    .evidence(Util.stringValue("code", err))//no evidence
+                    .raw(Util.stringValue("code", err))
                     .build();
         }
 

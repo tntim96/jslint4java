@@ -116,6 +116,7 @@ public class JSLintTest {
 
     @Test
     public void testGetEdition() throws Exception {
+        lint("");
         String edition = lint.getEdition();
         assertThat(edition, is(notNullValue()));
         String dateRe = "^\\d\\d\\d\\d-\\d\\d-\\d\\d$";
@@ -295,6 +296,6 @@ public class JSLintTest {
         lint.addOption(Option.WARNINGS);
         String js = "function foo(a, b) {\n    return a;\n}";
         List<Issue> issues = lint(js).getIssues();
-        assertIssues(issues, "Unused 'b'.");
+        assertIssues(issues, "This function needs a \"use strict\" pragma.", "Unused 'b'.");
     }
 }
